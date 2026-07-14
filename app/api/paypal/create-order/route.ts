@@ -1,70 +1,84 @@
+import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
-import { createBookingReference, validateBookingInput } from "../../../_lib/booking";
-import { notifyBookingAdmin } from "../../../_lib/email";
-import { createPayPalOrder } from "../../../_lib/paypal";
-import { resolveVerifiedPrice } from "../../../_lib/pricing";
+import {
+  AI_SPRINT_CURRENCY,
+  AI_SPRINT_PRICE,
+  paypalRequest,
+  type PayPalOrder,
+} from "@/lib/paypal";
+
+function clean(value: unknown, max = 80) {
+  return typeof value === "string" ? value.trim().slice(0, max) : "";
+}
 
 export async function POST(request: Request) {
   try {
-    const body = validateBookingInput(await request.json());
-    if (!body) {
+    const payload = (await request.json()) as {
+      reference?: unknown;
+      email?: unknown;
+    };
+
+    const reference = clean(payload.reference) || "IL-AI-SPRINT";
+    const email = clean(payload.email, 120);
+
+    const { response, data } = await paypalRequest<PayPalOrder>(
+      "/v2/checkout/orders",
+      {
+        method: "POST",
+        headers: {
+          "PayPal-Request-Id": `ai-sprint-create-${randomUUID()}`,
+          Prefer: "return=representation",
+        },
+        body: JSON.stringify({
+          intent: "CAPTURE",
+          purchase_units: [
+            {
+              reference_id: "ai-business-sprint",
+              custom_id: reference,
+              invoice_id: `${reference}-${randomUUID()}`.slice(0, 127),
+              description: "imaginelabs AI Business Sprint",
+              amount: {
+                currency_code: AI_SPRINT_CURRENCY,
+                value: AI_SPRINT_PRICE,
+              },
+            },
+          ],
+          payer: email
+            ? {
+                email_address: email,
+              }
+            : undefined,
+          application_context: {
+            brand_name: "imaginelabs",
+            shipping_preference: "NO_SHIPPING",
+            user_action: "PAY_NOW",
+          },
+        }),
+      },
+    );
+
+    if (!response.ok || !data.id) {
       return NextResponse.json(
-        { message: "Please complete all booking fields correctly." },
-        { status: 400 },
+        {
+          message: data.message || "Unable to create the PayPal order.",
+        },
+        { status: response.status || 500 },
       );
     }
 
-    const verified = await resolveVerifiedPrice({
-      offerToken: body.offerToken,
-      programmeId: body.programmeId,
-      planId: body.planId,
+    return NextResponse.json({
+      ok: true,
+      orderId: data.id,
+      currency: AI_SPRINT_CURRENCY,
+      value: Number(AI_SPRINT_PRICE),
     });
-    if (!verified) {
-      return NextResponse.json(
-        { message: "This price has expired. Refresh the page and try again." },
-        { status: 400 },
-      );
-    }
-
-    const reference = createBookingReference(verified.programme.shortCode);
-    const url = new URL(request.url);
-    const returnUrl = new URL("/api/paypal/capture", url.origin);
-    returnUrl.searchParams.set("reference", reference);
-    const cancelUrl = new URL("/booking/cancelled", url.origin);
-    cancelUrl.searchParams.set("reference", reference);
-
-    const order = await createPayPalOrder({
-      amountUsd: verified.price.paypalUsd,
-      description: `${verified.programme.title} · ${verified.price.sessions} sessions per month`,
-      reference,
-      returnUrl: returnUrl.toString(),
-      cancelUrl: cancelUrl.toString(),
-    });
-
-    await notifyBookingAdmin({
-      reference,
-      parentName: body.parentName,
-      parentEmail: body.parentEmail,
-      phone: body.phone,
-      childName: body.childName,
-      childAge: body.childAge,
-      grade: body.grade,
-      country: body.country,
-      city: body.city,
-      programme: verified.programme.title,
-      plan: `${verified.price.sessions} sessions / month`,
-      paymentMethod: "paypal",
-      displayedPrice: `${verified.price.localFormatted} / $${verified.price.paypalUsd.toFixed(2)} PayPal`,
-    });
-
-    return NextResponse.json({ approveUrl: order.approveUrl, reference });
   } catch (error) {
     return NextResponse.json(
       {
         message:
           error instanceof Error
             ? error.message
-            : "PayPal checkout could not be started.",
+            : "Unable to create the PayPal order.",
       },
       { status: 500 },
     );

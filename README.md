@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# imaginelabs AI Business Sprint - Phase 5
 
-## Getting Started
+This package adds reliable registration and PayPal conversion tracking for Google Tag Manager, GA4 and Meta Pixel.
 
-First, run the development server:
+## Included
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- GTM installed through `@next/third-parties/google`
+- `generate_lead` after confirmed registration
+- `begin_checkout` after PayPal creates a valid order
+- backend-created PayPal order fixed at ZAR 950
+- backend capture and amount/currency verification
+- `purchase` with PayPal capture ID, currency, value and item data
+- duplicate purchase protection for refresh/re-render scenarios
+- existing Resend and optional Listmonk registration integrations
+- GTM setup guide for GA4 and Meta
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Copy `.env.example` to `.env.local`.
+2. Add the GTM container ID.
+3. Add PayPal sandbox credentials first.
+4. Install dependencies with `npm install`.
+5. Run `npm run dev`.
+6. Configure GTM using `docs/gtm-phase-5.md`.
+7. Test registration and payment in GTM Preview and PayPal Sandbox.
+8. Change `PAYPAL_ENV=live` and use live PayPal credentials only after sandbox tests pass.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Important files
 
-## Learn More
+- `app/ai-business-sprint/page.tsx` - registration success event
+- `components/PayPalCheckout.tsx` - begin checkout and purchase events
+- `app/api/paypal/create-order/route.ts` - trusted server-side order creation
+- `app/api/paypal/capture-order/route.ts` - capture and payment verification
+- `app/layout.tsx` - GTM container installation
+- `docs/gtm-phase-5.md` - manual GTM configuration
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Run `npm run verify:tracking` to check that the required event names and purchase parameters are present.

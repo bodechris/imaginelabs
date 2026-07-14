@@ -1,80 +1,27 @@
-
 :root {
-  --il-purple-deep: #32145f;
-  --il-purple: #582998;
-  --il-lilac: #8b5fd3;
-  --il-mint: #1feac1;
-  --il-aqua: #51e6e3;
-  --il-yellow: #ffe01b;
-  --il-cream: #fffdf2;
-  --il-ink: #15101e;
-  --il-white: #ffffff;
-  --il-line: rgba(50, 20, 95, 0.15);
-  --il-muted: rgba(21, 16, 30, 0.66);
-  --il-display: var(--font-bricolage-grotesque), Arial, sans-serif;
-  --il-body: var(--font-roboto), Arial, Helvetica, sans-serif;
-  --il-ease: cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+  --purple-deep: #32145f;
+  --purple: #582998;
+  --mint: #1feac1;
+  --aqua: #51e6e3;
+  --yellow: #ffe01b;
+  --cream: #fffdf2;
+  --ink: #15101e;
+  --muted: rgba(21, 16, 30, 0.66);
 }
 
 * {
-  margin: 0;
-  padding: 0;
+  box-sizing: border-box;
 }
 
 html {
-  min-width: 320px;
   scroll-behavior: smooth;
-  background: var(--il-white);
 }
 
 body {
-  min-height: 100vh;
-  overflow-x: hidden;
-  background: var(--il-white);
-  color: var(--il-ink);
-  font-family: var(--il-body);
-  font-size: 16px;
-  line-height: 1.6;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-}
-
-body,
-button,
-input,
-select,
-textarea {
-  font-family: var(--il-body);
-}
-
-h1,
-h2 {
-  font-family: var(--il-display);
-  font-weight: 700;
-  line-height: 0.96;
-  letter-spacing: -0.055em;
-  text-wrap: balance;
-}
-
-h3,
-h4,
-h5,
-h6 {
-  font-family: var(--il-body);
-  font-weight: 700;
-  line-height: 1.08;
-  letter-spacing: -0.035em;
-  text-wrap: balance;
-}
-
-p {
-  text-wrap: pretty;
+  margin: 0;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 a {
@@ -82,63 +29,427 @@ a {
   text-decoration: none;
 }
 
-button {
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+.siteHeader {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28px clamp(20px, 4vw, 70px);
+  color: white;
+}
+
+.wordmark {
+  font-size: clamp(22px, 2.4vw, 34px);
+  font-weight: 900;
+  letter-spacing: -0.055em;
+}
+
+.headerCta,
+.primaryButton,
+.secondaryButton,
+.submitButton,
+.paymentPanel a,
+.paymentSuccess a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  border-radius: 999px;
+  padding: 14px 22px;
+  font-weight: 900;
+}
+
+.headerCta,
+.primaryButton,
+.submitButton {
   border: 0;
+  background: var(--yellow);
+  color: var(--purple-deep);
+}
+
+.hero {
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.65fr);
+  align-items: end;
+  gap: clamp(36px, 6vw, 100px);
+  padding: clamp(150px, 17vw, 220px) clamp(20px, 4vw, 70px) 80px;
+  color: white;
+  background:
+    radial-gradient(circle at 86% 12%, rgba(139, 95, 211, 0.7), transparent 30%),
+    radial-gradient(circle at 15% 88%, rgba(31, 234, 193, 0.16), transparent 34%),
+    linear-gradient(135deg, #130a2a, #32145f 48%, #582998);
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--mint);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.hero h1,
+.outcomes h2,
+.register h2 {
+  margin: 20px 0 0;
+  font-size: clamp(52px, 8.6vw, 142px);
+  line-height: 0.88;
+  letter-spacing: -0.075em;
+}
+
+.hero h1 span {
+  color: var(--yellow);
+}
+
+.lead {
+  max-width: 720px;
+  margin: 30px 0 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: clamp(18px, 2vw, 27px);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.heroActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 36px;
+}
+
+.secondaryButton {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.classCard {
+  padding: clamp(26px, 4vw, 44px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 38px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+}
+
+.classCard > p {
+  margin: 0;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.classCard > strong {
+  display: block;
+  margin-top: 42px;
+  color: var(--yellow);
+  font-size: clamp(72px, 9vw, 124px);
+  letter-spacing: -0.08em;
+}
+
+.classCard dl {
+  display: grid;
+  gap: 12px;
+  margin: 44px 0 0;
+}
+
+.classCard dl div {
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.classCard dt {
+  color: rgba(255, 255, 255, 0.54);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.classCard dd {
+  margin: 7px 0 0;
+  font-weight: 800;
+}
+
+.outcomes,
+.register {
+  padding: clamp(80px, 10vw, 150px) clamp(20px, 4vw, 70px);
+}
+
+.outcomes {
+  color: white;
+  background: linear-gradient(135deg, #15101e, #32145f 55%, #1b0b34);
+}
+
+.outcomes h2,
+.register h2 {
+  max-width: 1080px;
+  font-size: clamp(48px, 7vw, 110px);
+}
+
+.outcomeGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 64px;
+}
+
+.outcomeGrid article {
+  min-height: 220px;
+  padding: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.outcomeGrid span {
+  color: var(--yellow);
+  font-weight: 900;
+}
+
+.outcomeGrid h3 {
+  margin: 78px 0 0;
+  font-size: 24px;
+  letter-spacing: -0.045em;
+}
+
+.register {
+  display: grid;
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+  gap: 18px;
+  color: white;
+  background:
+    radial-gradient(circle at 90% 0%, rgba(255, 224, 27, 0.15), transparent 32%),
+    linear-gradient(135deg, #15101e, #32145f 58%, #582998);
+}
+
+.registerIntro,
+.formShell {
+  padding: clamp(26px, 4vw, 48px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 38px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.registerIntro > p:not(.eyebrow) {
+  margin-top: 26px;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.referenceBox {
+  margin-top: 30px;
+  padding: 20px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.referenceBox span,
+.referenceBox strong {
+  display: block;
+}
+
+.referenceBox span {
+  color: var(--mint);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.referenceBox strong {
+  margin-top: 8px;
+  word-break: break-word;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.formGrid label {
+  display: grid;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.fullField {
+  grid-column: 1 / -1;
+}
+
+input,
+textarea {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  padding: 14px 15px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  font-weight: 800;
+}
+
+input {
+  min-height: 52px;
+}
+
+textarea {
+  min-height: 126px;
+  resize: vertical;
+}
+
+input:focus,
+textarea:focus {
+  border-color: var(--mint);
+  box-shadow: 0 0 0 3px rgba(31, 234, 193, 0.12);
+}
+
+.paymentToggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.paymentToggle button {
+  min-height: 58px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  font-weight: 900;
   cursor: pointer;
 }
 
-button:disabled {
-  cursor: wait;
+.paymentToggle button.active {
+  border-color: var(--yellow);
+  background: rgba(255, 224, 27, 0.14);
+}
+
+.submitButton {
+  width: 100%;
+  margin-top: 18px;
+  cursor: pointer;
+}
+
+.submitButton:disabled {
   opacity: 0.65;
+  cursor: default;
 }
 
-img,
-svg,
-video,
-canvas {
-  display: block;
-  max-width: 100%;
+.successMessage,
+.errorMessage,
+.paymentStatus,
+.paymentError {
+  margin: 16px 0 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-weight: 800;
 }
 
-::selection {
-  background: var(--il-yellow);
-  color: var(--il-purple-deep);
+.successMessage,
+.paymentStatus {
+  background: rgba(31, 234, 193, 0.13);
+  color: #b6fff0;
 }
 
-:focus-visible {
-  outline: 3px solid var(--il-mint);
-  outline-offset: 4px;
+.errorMessage,
+.paymentError {
+  background: rgba(255, 90, 90, 0.14);
+  color: #ffd1d1;
 }
 
-[data-reveal] {
-  opacity: 0;
-  transform: translateY(34px);
-  transition:
-    opacity 0.9s var(--il-ease),
-    transform 0.9s var(--il-ease);
+.paymentPanel,
+.paymentSuccess {
+  margin-top: 20px;
+  padding: 22px;
+  border-radius: 24px;
+  background: rgba(0, 0, 0, 0.2);
 }
 
-[data-reveal][data-visible="true"] {
-  opacity: 1;
-  transform: translateY(0);
+.paymentPanel h3,
+.paymentSuccess h3 {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: -0.04em;
+}
+
+.paymentPanel p,
+.paymentSuccess p {
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+}
+
+.paymentPanel a,
+.paymentSuccess a {
+  margin-top: 12px;
+  background: white;
+  color: var(--purple-deep);
+}
+
+.paypalCheckout {
+  margin-top: 20px;
+  min-height: 54px;
+}
+
+@media (max-width: 980px) {
+  .hero,
+  .register {
+    grid-template-columns: 1fr;
+  }
+
+  .outcomeGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 620px) {
+  .siteHeader {
+    padding: 20px;
+  }
+
+  .headerCta {
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+
+  .hero {
+    padding-inline: 18px;
+  }
+
+  .hero h1 {
+    font-size: clamp(50px, 16vw, 76px);
+  }
+
+  .outcomeGrid,
+  .formGrid,
+  .paymentToggle {
+    grid-template-columns: 1fr;
+  }
+
+  .fullField {
+    grid-column: auto;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
-  }
-
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-  }
-
-  [data-reveal] {
-    opacity: 1;
-    transform: none;
   }
 }
