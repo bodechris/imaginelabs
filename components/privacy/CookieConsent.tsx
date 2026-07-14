@@ -14,8 +14,6 @@ type ConsentPreferences = {
 declare global {
   interface Window {
     __IL_CONSENT__?: ConsentPreferences;
-    dataLayer?: unknown[];
-    gtag?: (...args: unknown[]) => void;
   }
 }
 
