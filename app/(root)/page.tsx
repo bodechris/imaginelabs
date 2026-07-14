@@ -1050,7 +1050,7 @@ export default function AiBusinessSprintPage() {
                 {paypalStatus === "checking"
                   ? "Checking PayPal configuration..."
                   : paypalStatus === "unavailable"
-                    ? "Unavailable until the PayPal Client ID and Secret are added to .env.local."
+                    ? "Payment through PayPal is currently unavailable." 
                     : `Pay through PayPal${paypalAmountUsd ? ` · USD $${paypalAmountUsd.toFixed(2)}` : ""}. PayPal opens its own secure checkout and may offer debit or credit card to eligible buyers.`}
               </small>
             </label>

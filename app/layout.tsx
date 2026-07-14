@@ -20,11 +20,11 @@ const roboto = Roboto({
 
 export const metadata: Metadata = {
   title: {
-    default: "Imaginelabs — Future Creators",
+    default: "Imaginelabs — AI Learning for Businesses & Young Creators",
     template: "%s | Imaginelabs",
   },
   description:
-    "Live, project-based design, coding, mathematics and responsible AI programmes for young creators aged 8–17.",
+    "Practical AI training for small businesses, plus project-driven coding, design and maths programmes for young learners.",
 };
 
 export default function RootLayout({
