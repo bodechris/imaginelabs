@@ -772,10 +772,9 @@ export default function AiBusinessSprintPage() {
 
       <section className="section notAudience" id="not-for">
         <div className="sectionIntro narrow">
-          <p className="eyebrow">Who this class is not for</p>
+          {/* <p className="eyebrow">Who this class is not for</p> */}
           <h2>
-            Clear expectations make the class more valuable for the right
-            people.
+            Who this class is not for
           </h2>
         </div>
         <div className="notForGrid">
@@ -790,7 +789,7 @@ export default function AiBusinessSprintPage() {
 
       <section className="section outcomes" id="outcomes">
         <div className="sectionIntro narrow">
-          <p className="eyebrow">Actual outputs</p>
+          <p className="eyebrow">Actual outcomes. Usable business assets</p>
           <h2>This is not a lecture. You leave with usable business assets.</h2>
         </div>
         <div className="outcomeGrid">

@@ -1,0 +1,17 @@
+/* Root AI Business Sprint landing-page refinements. */
+.aiPage .navBar .brand {
+  width: clamp(156px, 14vw, 210px);
+  flex: 0 0 auto;
+}
+
+.aiPage .navBar .brand img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@media (max-width: 640px) {
+  .aiPage .navBar .brand {
+    width: clamp(148px, 42vw, 184px);
+  }
+}

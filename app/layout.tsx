@@ -1,8 +1,12 @@
-import type { CSSProperties } from "react";
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Bricolage_Grotesque, Roboto } from "next/font/google";
-
+import CookieConsent from "@/components/privacy/CookieConsent";
 import "./globals.css";
+
+import { GoogleTagManager } from "@next/third-parties/google";
+
+const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
 
 const bricolageGrotesque = Bricolage_Grotesque({
   subsets: ["latin"],
@@ -19,35 +23,40 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://imaginelabs.bodilum.com"),
   title: {
-    default: "Imaginelabs — AI Learning for Businesses & Young Creators",
-    template: "%s | Imaginelabs",
+    default: "imaginelabs",
+    template: "%s | imaginelabs",
   },
   description:
-    "Practical AI training for small businesses, plus project-driven coding, design and maths programmes for young learners.",
+    "Cutting-edge, AI-literate learning for small businesses and future leaders—building practical skills in AI, coding, design, mathematics, and creative problem-solving.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  const fontStyles = {
-    "--il-display": bricolageGrotesque.style.fontFamily,
-    "--il-body": roboto.style.fontFamily,
-    fontFamily: roboto.style.fontFamily,
-  } as CSSProperties;
-
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="en"
-      className={`${bricolageGrotesque.variable} ${roboto.variable}`}
-    >
-      <body
-        className={`${bricolageGrotesque.variable} ${roboto.variable} ${roboto.className}`}
-        style={fontStyles}
-      >
+    <html lang="en">
+      <head>
+        <Script id="imaginelabs-consent-default" strategy="beforeInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            window.gtag = window.gtag || gtag;
+            gtag('consent', 'default', {
+              analytics_storage: 'denied',
+              ad_storage: 'denied',
+              ad_user_data: 'denied',
+              ad_personalization: 'denied',
+              wait_for_update: 500
+            });
+          `}
+        </Script>
+      </head>
+      {gtmId ? <GoogleTagManager gtmId={gtmId} /> : null}
+      <body className={`${bricolageGrotesque.variable} ${roboto.variable}`}>
         {children}
+        <CookieConsent />
       </body>
     </html>
   );
