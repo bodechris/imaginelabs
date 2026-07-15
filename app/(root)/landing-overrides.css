@@ -1,24 +1,33 @@
 /* Root AI Business Sprint landing-page refinements. */
 
 /*
- * globals.css still contains the compact /ai-business-sprint fallback page.
- * Its generic .hero selector turns every hero into a two-column grid. The
- * premium landing page has its own nested .heroGrid, so reset the outer hero
- * here to prevent the layout from being auto-placed into narrow grid tracks.
+ * globals.css still contains legacy, unscoped styles for a different page,
+ * including `.hero { display: grid; ... }`. The landing page hero contains
+ * decorative elements and its own inner `.heroGrid`, so allowing that legacy
+ * rule to apply turns every direct hero child into a grid item and collapses
+ * the main copy into a narrow column. Keep the outer hero as a normal block
+ * and let `.heroGrid` control the two-column layout.
  */
-.aiPage .hero {
+.aiPage > .hero {
   display: block;
   grid-template-columns: none;
   align-items: initial;
   gap: 0;
-  width: 100%;
-  overflow: clip;
 }
 
-.aiPage .heroGrid,
-.aiPage .heroCopy,
-.aiPage .heroCard {
+.aiPage > .hero .heroGrid {
+  width: 100%;
+}
+
+.aiPage > .hero .heroCopy,
+.aiPage > .hero .heroCard {
   min-width: 0;
+}
+
+.aiPage > .hero h1 {
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
 }
 
 .aiPage .navBar .brand {
@@ -32,10 +41,15 @@
   height: auto;
 }
 
+.aiPage .heroCard .hero-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 @media (max-width: 980px) {
-  .aiPage .hero {
-    display: block;
-    grid-template-columns: none;
+  .aiPage > .hero .heroGrid {
+    grid-template-columns: 1fr;
   }
 }
 

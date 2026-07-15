@@ -1,30 +1,22 @@
 import { NextResponse } from "next/server";
+import {
+  aiSprintConfig,
+  createAiSprintReference,
+  type AiSprintRegistration,
+  type AiSprintRegistrationPayload,
+  validateAiSprintRegistration,
+} from "../../../_lib/ai-business-sprint";
+import {
+  createStandardPayPalButtonOrder,
+  PayPalApiError,
+} from "../../../_lib/paypal";
 
-type RegisterPayload = {
-  firstName?: unknown;
-  lastName?: unknown;
-  companyName?: unknown;
-  workEmail?: unknown;
-  workPhone?: unknown;
-  goal?: unknown;
-  paymentMethod?: unknown;
-  reference?: unknown;
-};
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-type RegistrationInput = {
+type RegistrationInput = AiSprintRegistration & {
   reference: string;
-  firstName: string;
-  lastName: string;
-  companyName: string;
-  workEmail: string;
-  workPhone: string;
-  goal: string;
-  paymentMethod: string;
 };
-
-function clean(value: unknown, max = 220) {
-  return typeof value === "string" ? value.trim().slice(0, max) : "";
-}
 
 function escapeHtml(value: string) {
   return value
@@ -53,6 +45,10 @@ function listmonkUrl(path: string) {
   return `${baseUrl}${path}`;
 }
 
+function paymentLabel(method: RegistrationInput["paymentMethod"]) {
+  return method === "bank" ? "FNB deposit" : "PayPal";
+}
+
 async function addToListmonk(input: RegistrationInput) {
   const headers = listmonkHeaders();
   const url = listmonkUrl("/api/subscribers");
@@ -71,14 +67,20 @@ async function addToListmonk(input: RegistrationInput) {
       preconfirm_subscriptions: true,
       attribs: {
         source: "imaginelabs_ai_business_sprint_page",
-        programme: "imaginelabs AI Business Sprint",
-        class_date: "Saturday, 1 August",
-        class_time: "10:00 AM - 1:00 PM SAST",
+        programme: aiSprintConfig.programme,
+        class_date: aiSprintConfig.classDate,
+        class_time: aiSprintConfig.classTime,
         reference: input.reference,
         company_name: input.companyName,
+        business_type: input.businessType,
+        job_title: input.jobTitle,
         work_phone: input.workPhone,
-        payment_method: input.paymentMethod,
+        country: input.country,
+        city: input.city,
+        website_or_social: input.websiteOrSocial,
+        payment_method: paymentLabel(input.paymentMethod),
         goal: input.goal,
+        marketing_consent: input.marketingConsent,
       },
     }),
     cache: "no-store",
@@ -108,10 +110,11 @@ async function sendListmonkConfirmation(input: RegistrationInput) {
         last_name: input.lastName,
         company_name: input.companyName,
         reference: input.reference,
-        payment_method: input.paymentMethod,
-        class_date: "Saturday, 1 August",
-        class_time: "10:00 AM - 1:00 PM SAST",
-        price: "R950",
+        payment_method: paymentLabel(input.paymentMethod),
+        class_date: aiSprintConfig.classDate,
+        class_time: aiSprintConfig.classTime,
+        price: `R${aiSprintConfig.priceZar}`,
+        paypal_price: `USD ${aiSprintConfig.paypalUsd.toFixed(2)}`,
         whatsapp: "0733110149",
       },
     }),
@@ -121,13 +124,31 @@ async function sendListmonkConfirmation(input: RegistrationInput) {
   return response.ok;
 }
 
-async function sendAdminEmail(input: Record<string, string>) {
+async function sendAdminEmail(input: RegistrationInput) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.BOOKING_FROM_EMAIL;
   const admin = process.env.BOOKING_ADMIN_EMAIL || "imaginelabs@bodilum.com";
   if (!apiKey || !from || !admin) return false;
 
-  const rows = Object.entries(input)
+  const rows = [
+    ["Reference", input.reference],
+    ["Name", `${input.firstName} ${input.lastName}`],
+    ["Company", input.companyName],
+    ["Business type", input.businessType],
+    ["Role", input.jobTitle || "—"],
+    ["Email", input.workEmail],
+    ["Phone", input.workPhone],
+    ["Location", [input.city, input.country].filter(Boolean).join(", ")],
+    ["Website / social", input.websiteOrSocial || "—"],
+    ["Goal", input.goal],
+    ["Payment", paymentLabel(input.paymentMethod)],
+    ["Marketing consent", input.marketingConsent ? "Yes" : "No"],
+    ["Programme", aiSprintConfig.programme],
+    ["Class", `${aiSprintConfig.classDate} · ${aiSprintConfig.classTime}`],
+    ["Price", `R${aiSprintConfig.priceZar}`],
+  ];
+
+  const htmlRows = rows
     .map(
       ([label, value]) =>
         `<tr><td style="padding:8px 18px 8px 0;color:#582998;font-weight:700">${escapeHtml(label)}</td><td style="padding:8px 0;color:#15101e">${escapeHtml(value)}</td></tr>`,
@@ -143,12 +164,12 @@ async function sendAdminEmail(input: Record<string, string>) {
     body: JSON.stringify({
       from,
       to: [admin],
-      subject: `New AI Business Sprint registration - ${input.Reference}`,
+      subject: `New AI Business Sprint registration - ${input.reference}`,
       html: `
         <div style="font-family:Arial,sans-serif;max-width:680px;margin:auto;color:#15101e">
           <p style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#582998">imaginelabs AI Business Sprint</p>
           <h1 style="font-size:34px;line-height:1.05;margin:0 0 24px">New registration</h1>
-          <table style="border-collapse:collapse;width:100%">${rows}</table>
+          <table style="border-collapse:collapse;width:100%">${htmlRows}</table>
         </div>
       `,
     }),
@@ -160,79 +181,93 @@ async function sendAdminEmail(input: Record<string, string>) {
 
 export async function POST(request: Request) {
   try {
-    const payload = (await request.json()) as RegisterPayload;
-    const firstName = clean(payload.firstName, 80);
-    const lastName = clean(payload.lastName, 80);
-    const companyName = clean(payload.companyName, 120);
-    const workEmail = clean(payload.workEmail, 120).toLowerCase();
-    const workPhone = clean(payload.workPhone, 80);
-    const goal = clean(payload.goal, 800);
-    const reference = clean(payload.reference, 60) || "IL-AI-AUG01-SEAT";
-    const paymentMethod =
-      clean(payload.paymentMethod, 20) === "bank" ? "FNB deposit" : "PayPal";
+    const payload = (await request.json()) as AiSprintRegistrationPayload;
+    const registration = validateAiSprintRegistration(payload);
 
-    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(workEmail);
-    if (
-      firstName.length < 2 ||
-      lastName.length < 2 ||
-      companyName.length < 2 ||
-      !emailValid ||
-      workPhone.length < 7 ||
-      goal.length < 8
-    ) {
+    if (!registration) {
       return NextResponse.json(
-        { message: "Please complete all registration fields correctly." },
+        {
+          ok: false,
+          message:
+            "Please complete all required registration fields correctly.",
+        },
         { status: 400 },
       );
     }
 
-    const registration: RegistrationInput = {
-      reference,
-      firstName,
-      lastName,
-      companyName,
-      workEmail,
-      workPhone,
-      goal,
-      paymentMethod,
-    };
+    const reference = createAiSprintReference();
+    const input: RegistrationInput = { ...registration, reference };
+
+    let paypalOrderId: string | null = null;
+
+    if (registration.paymentMethod === "paypal") {
+      const order = await createStandardPayPalButtonOrder({
+        amountUsd: aiSprintConfig.paypalUsd,
+        description: aiSprintConfig.programme,
+        itemName: "AI Business Sprint",
+        reference,
+        buyer: {
+          emailAddress: registration.workEmail,
+          givenName: registration.firstName,
+          surname: registration.lastName,
+          phone: registration.workPhone,
+          country: registration.country,
+        },
+      });
+
+      paypalOrderId = order.orderId;
+    }
 
     const [emailSent, listmonkSynced, listmonkConfirmationSent] =
       await Promise.all([
-        sendAdminEmail({
-          Reference: reference,
-          Name: `${firstName} ${lastName}`,
-          Company: companyName,
-          Email: workEmail,
-          Phone: workPhone,
-          Goal: goal,
-          Payment: paymentMethod,
-          Programme: "imaginelabs AI Business Sprint",
-          Class: "Saturday, 1 August - 10:00 AM - 1:00 PM SAST",
-          Price: "R950",
-        }),
-        addToListmonk(registration).catch(() => false),
-        sendListmonkConfirmation(registration).catch(() => false),
+        sendAdminEmail(input).catch(() => false),
+        addToListmonk(input).catch(() => false),
+        sendListmonkConfirmation(input).catch(() => false),
       ]);
 
-    return NextResponse.json({
-      ok: true,
-      reference,
-      emailSent,
-      listmonkSynced,
-      listmonkConfirmationSent,
-      message:
-        emailSent || listmonkSynced
-          ? "Registration received."
-          : "Registration prepared. Please send your details on WhatsApp so we can confirm your seat.",
-    });
-  } catch {
     return NextResponse.json(
       {
+        ok: true,
+        reference,
+        paypalCheckoutMode:
+          registration.paymentMethod === "paypal"
+            ? "standard_paypal_button"
+            : null,
+        paypalOrderId,
+        currency: registration.paymentMethod === "paypal" ? "USD" : "ZAR",
+        value:
+          registration.paymentMethod === "paypal"
+            ? aiSprintConfig.paypalUsd
+            : Number(aiSprintConfig.priceZar),
+        priceZar: Number(aiSprintConfig.priceZar),
+        emailSent,
+        listmonkSynced,
+        listmonkConfirmationSent,
         message:
-          "Registration could not be submitted. Please try WhatsApp instead.",
+          registration.paymentMethod === "paypal"
+            ? "Registration received. Continue with the secure PayPal button below."
+            : "Registration received. Use the generated reference for your FNB payment.",
       },
-      { status: 500 },
+      {
+        headers: {
+          "Cache-Control": "no-store, max-age=0",
+        },
+      },
+    );
+  } catch (error) {
+    console.error("AI Business Sprint registration failed", error);
+
+    const status = error instanceof PayPalApiError ? 502 : 500;
+
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Registration could not be submitted. Please try WhatsApp instead.",
+      },
+      { status },
     );
   }
 }

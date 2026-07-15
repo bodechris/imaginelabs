@@ -1,23 +1,49 @@
 import Link from "next/link";
+import PurchaseTracker from "./PurchaseTracker";
 
 type Props = {
-  searchParams: Promise<{ reference?: string }>;
+  searchParams: Promise<{
+    reference?: string;
+    transaction_id?: string;
+    order_id?: string;
+    currency?: string;
+    value?: string;
+  }>;
 };
 
 export default async function AiSprintConfirmedPage({ searchParams }: Props) {
   const params = await searchParams;
   const reference = params.reference || "Imaginelabs booking";
+  const transactionId = params.transaction_id?.trim() || "";
+  const orderId = params.order_id?.trim() || "";
+  const currency = /^[A-Z]{3}$/.test(params.currency || "")
+    ? (params.currency as string)
+    : "USD";
+  const value = Number(params.value);
+  const canTrackPurchase =
+    Boolean(transactionId && orderId) && Number.isFinite(value) && value > 0;
 
   return (
     <main className="paymentResultPage">
+      {canTrackPurchase ? (
+        <PurchaseTracker
+          transactionId={transactionId}
+          orderId={orderId}
+          reference={reference}
+          currency={currency}
+          value={value}
+        />
+      ) : null}
+
       <section>
         <p>Imaginelabs AI Business Sprint</p>
         <h1>Your seat is confirmed.</h1>
         <span>Reference</span>
         <strong>{reference}</strong>
         <p>
-          Your PayPal payment was completed successfully. We will email the class link,
-          preparation checklist and onboarding information before the session.
+          Your PayPal payment was completed successfully. We will email the
+          class link, preparation checklist and onboarding information before
+          the session.
         </p>
         <div>
           <Link href="/">Return to the class page</Link>

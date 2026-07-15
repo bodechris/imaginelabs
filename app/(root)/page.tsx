@@ -6,6 +6,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import PayPalStandardCheckoutButton from "../_components/PayPalStandardCheckoutButton";
+import { trackBeginCheckout, trackGenerateLead } from "../_lib/tracking";
 
 const whatsappNumber = "27733110149";
 const classPrice = "R950";
@@ -600,13 +601,16 @@ export default function AiBusinessSprintPage() {
         body: JSON.stringify({ ...form, paymentMethod }),
       });
       const data = (await response.json()) as {
+        ok?: boolean;
         message?: string;
         reference?: string;
-        paypalCheckoutMode?: string;
-        paypalOrderId?: string;
+        paypalCheckoutMode?: string | null;
+        paypalOrderId?: string | null;
+        currency?: string;
+        value?: number;
       };
 
-      if (!response.ok) {
+      if (!response.ok || !data.ok) {
         throw new Error(data.message || "Unable to submit registration.");
       }
 
@@ -617,6 +621,11 @@ export default function AiBusinessSprintPage() {
       setReference(data.reference);
       setFormMessage(data.message || "Registration received.");
 
+      trackGenerateLead({
+        reference: data.reference,
+        paymentMethod,
+      });
+
       if (paymentMethod === "paypal") {
         if (
           data.paypalCheckoutMode !== "standard_paypal_button" ||
@@ -626,6 +635,20 @@ export default function AiBusinessSprintPage() {
             "PayPal Standard Checkout could not be prepared for this order.",
           );
         }
+
+        const checkoutCurrency = data.currency || "USD";
+        const checkoutValue = Number(data.value);
+
+        if (!Number.isFinite(checkoutValue) || checkoutValue <= 0) {
+          throw new Error("The PayPal checkout amount is invalid.");
+        }
+
+        trackBeginCheckout({
+          orderId: data.paypalOrderId,
+          reference: data.reference,
+          currency: checkoutCurrency,
+          value: checkoutValue,
+        });
 
         setPaypalOrderId(data.paypalOrderId);
         setSubmittedMethod("paypal");
@@ -773,9 +796,7 @@ export default function AiBusinessSprintPage() {
       <section className="section notAudience" id="not-for">
         <div className="sectionIntro narrow">
           {/* <p className="eyebrow">Who this class is not for</p> */}
-          <h2>
-            Who this class is not for
-          </h2>
+          <h2>Who this class is not for</h2>
         </div>
         <div className="notForGrid">
           {whoThisIsNotFor.map((item) => (
@@ -1049,7 +1070,7 @@ export default function AiBusinessSprintPage() {
                 {paypalStatus === "checking"
                   ? "Checking PayPal configuration..."
                   : paypalStatus === "unavailable"
-                    ? "Payment through PayPal is currently unavailable." 
+                    ? "Payment through PayPal is currently unavailable."
                     : `Pay through PayPal${paypalAmountUsd ? ` · USD $${paypalAmountUsd.toFixed(2)}` : ""}. PayPal opens its own secure checkout and may offer debit or credit card to eligible buyers.`}
               </small>
             </label>
@@ -1322,13 +1343,7 @@ export default function AiBusinessSprintPage() {
 
         .hero {
           position: relative;
-          display: block;
-          grid-template-columns: none;
-          align-items: initial;
-          gap: 0;
-          width: 100%;
           min-height: 100svh;
-          overflow: clip;
           padding: 34px clamp(18px, 4vw, 72px) 72px;
           isolation: isolate;
           color: white;
@@ -1530,24 +1545,14 @@ export default function AiBusinessSprintPage() {
           background: linear-gradient(150deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
           box-shadow: 0 50px 150px rgba(0, 0, 0, 0.24);
           backdrop-filter: blur(22px);
-        }
 
-        .hero-image {
-          position: relative;
-          width: 100%;
-          height: 360px;
-          margin-top: 22px;
-          overflow: hidden;
-          border-radius: 20px;
-          background: rgba(255, 255, 255, 0.08);
-        }
-
-        .hero-image img {
-          display: block;
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          object-position: center;
+          .hero-image {
+            width: 100%;
+            height: auto;
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px;
+          }
         }
 
         .cardTopline {

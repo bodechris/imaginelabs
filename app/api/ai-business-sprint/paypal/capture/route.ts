@@ -12,6 +12,9 @@ type CaptureResult = {
   reference: string;
   amount: string;
   orderId: string;
+  transactionId: string;
+  currency: string;
+  value: number;
 };
 
 async function completePayment(
@@ -62,7 +65,14 @@ async function completePayment(
   const payerEmail =
     capture.payer?.email_address ||
     suppliedCustomer?.email?.trim().toLowerCase();
-  const amount = `${currency} ${Number(amountValue).toFixed(2)}`;
+  const numericValue = Number(amountValue);
+  const transactionId = completedCapture?.id;
+
+  if (!transactionId) {
+    throw new Error("PayPal did not return a capture transaction ID.");
+  }
+
+  const amount = `${currency} ${numericValue.toFixed(2)}`;
 
   await Promise.all([
     sendAiSprintPaymentConfirmation({
@@ -87,6 +97,9 @@ async function completePayment(
     reference,
     amount,
     orderId: capture.id || orderId,
+    transactionId,
+    currency,
+    value: numericValue,
   };
 }
 
@@ -161,6 +174,10 @@ export async function GET(request: Request) {
     const result = await completePayment(token, suppliedReference);
     const confirmedUrl = new URL("/ai-business-sprint/confirmed", url.origin);
     confirmedUrl.searchParams.set("reference", result.reference);
+    confirmedUrl.searchParams.set("transaction_id", result.transactionId);
+    confirmedUrl.searchParams.set("order_id", result.orderId);
+    confirmedUrl.searchParams.set("currency", result.currency);
+    confirmedUrl.searchParams.set("value", result.value.toFixed(2));
     return NextResponse.redirect(confirmedUrl);
   } catch (error) {
     console.error("AI Business Sprint PayPal redirect capture failed", error);

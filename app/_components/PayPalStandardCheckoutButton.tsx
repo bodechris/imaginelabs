@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { trackPurchase } from "../_lib/tracking";
 
 type PayPalApprovalData = {
   orderID: string;
@@ -170,13 +171,15 @@ export default function PayPalStandardCheckoutButton({
                   }),
                 },
               );
-              const payload = (await response.json().catch(() => null)) as
-                | {
-                    ok?: boolean;
-                    reference?: string;
-                    message?: string;
-                  }
-                | null;
+              const payload = (await response.json().catch(() => null)) as {
+                ok?: boolean;
+                reference?: string;
+                orderId?: string;
+                transactionId?: string;
+                currency?: string;
+                value?: number;
+                message?: string;
+              } | null;
 
               if (!response.ok || !payload?.ok) {
                 throw new Error(
@@ -186,9 +189,35 @@ export default function PayPalStandardCheckoutButton({
               }
 
               const confirmedReference = payload.reference || reference;
-              window.location.assign(
-                `/ai-business-sprint/confirmed?reference=${encodeURIComponent(confirmedReference)}`,
+              const confirmedOrderId = payload.orderId || orderID;
+              const transactionId = payload.transactionId;
+              const currency = payload.currency || "USD";
+              const value = Number(payload.value);
+
+              if (!transactionId || !Number.isFinite(value) || value <= 0) {
+                throw new Error(
+                  "PayPal confirmed the payment, but the transaction details were incomplete.",
+                );
+              }
+
+              await trackPurchase({
+                transactionId,
+                orderId: confirmedOrderId,
+                reference: confirmedReference,
+                currency,
+                value,
+              });
+
+              const confirmedUrl = new URL(
+                "/ai-business-sprint/confirmed",
+                window.location.origin,
               );
+              confirmedUrl.searchParams.set("reference", confirmedReference);
+              confirmedUrl.searchParams.set("transaction_id", transactionId);
+              confirmedUrl.searchParams.set("order_id", confirmedOrderId);
+              confirmedUrl.searchParams.set("currency", currency);
+              confirmedUrl.searchParams.set("value", value.toFixed(2));
+              window.location.assign(confirmedUrl.toString());
             } catch (error) {
               console.error("PayPal capture confirmation failed", error);
               if (!active) return;

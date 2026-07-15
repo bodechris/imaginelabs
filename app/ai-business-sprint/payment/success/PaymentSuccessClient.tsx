@@ -3,12 +3,16 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { trackPurchase } from "../../../_lib/tracking";
 
 type CaptureResponse = {
   ok?: boolean;
   reference?: string;
   amount?: string;
   orderId?: string;
+  transactionId?: string;
+  currency?: string;
+  value?: number;
   message?: string;
 };
 
@@ -52,6 +56,29 @@ export default function PaymentSuccessClient() {
             payload?.message || "We could not confirm your PayPal payment.",
           );
         }
+
+        const transactionId = payload.transactionId;
+        const currency = payload.currency || "USD";
+        const value = Number(payload.value);
+
+        if (
+          !transactionId ||
+          !payload.orderId ||
+          !Number.isFinite(value) ||
+          value <= 0
+        ) {
+          throw new Error(
+            "PayPal confirmed the payment, but the transaction details were incomplete.",
+          );
+        }
+
+        await trackPurchase({
+          transactionId,
+          orderId: payload.orderId,
+          reference: payload.reference || reference,
+          currency,
+          value,
+        });
 
         if (active) setResult(payload);
       } catch (captureError) {
