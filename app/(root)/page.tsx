@@ -1322,7 +1322,13 @@ export default function AiBusinessSprintPage() {
 
         .hero {
           position: relative;
+          display: block;
+          grid-template-columns: none;
+          align-items: initial;
+          gap: 0;
+          width: 100%;
           min-height: 100svh;
+          overflow: clip;
           padding: 34px clamp(18px, 4vw, 72px) 72px;
           isolation: isolate;
           color: white;
@@ -1524,14 +1530,24 @@ export default function AiBusinessSprintPage() {
           background: linear-gradient(150deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
           box-shadow: 0 50px 150px rgba(0, 0, 0, 0.24);
           backdrop-filter: blur(22px);
+        }
 
-          .hero-image {
-            width: 100%;
-            height: auto;
-            position: relative;
-            overflow: hidden;
-            border-radius: 20px;
-          }
+        .hero-image {
+          position: relative;
+          width: 100%;
+          height: 360px;
+          margin-top: 22px;
+          overflow: hidden;
+          border-radius: 20px;
+          background: rgba(255, 255, 255, 0.08);
+        }
+
+        .hero-image img {
+          display: block;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: center;
         }
 
         .cardTopline {

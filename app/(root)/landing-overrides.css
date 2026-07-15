@@ -1,4 +1,26 @@
 /* Root AI Business Sprint landing-page refinements. */
+
+/*
+ * globals.css still contains the compact /ai-business-sprint fallback page.
+ * Its generic .hero selector turns every hero into a two-column grid. The
+ * premium landing page has its own nested .heroGrid, so reset the outer hero
+ * here to prevent the layout from being auto-placed into narrow grid tracks.
+ */
+.aiPage .hero {
+  display: block;
+  grid-template-columns: none;
+  align-items: initial;
+  gap: 0;
+  width: 100%;
+  overflow: clip;
+}
+
+.aiPage .heroGrid,
+.aiPage .heroCopy,
+.aiPage .heroCard {
+  min-width: 0;
+}
+
 .aiPage .navBar .brand {
   width: clamp(156px, 14vw, 210px);
   flex: 0 0 auto;
@@ -8,6 +30,13 @@
   display: block;
   width: 100%;
   height: auto;
+}
+
+@media (max-width: 980px) {
+  .aiPage .hero {
+    display: block;
+    grid-template-columns: none;
+  }
 }
 
 @media (max-width: 640px) {
